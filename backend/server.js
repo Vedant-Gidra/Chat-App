@@ -11,13 +11,28 @@ dotenv.config();
 connectDB();
 const app = express();
 
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "https://chat-app-seven-phi-8hurbe040o.vercel.app",
+  "http://localhost:3000",
+].filter(Boolean);
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error("Not allowed by CORS"));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
 app.use(express.json()); // to accept json data
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL,
-    credentials: true,
-  })
-);
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 // app.get("/", (req, res) => {
 //   res.send("API Running!");
@@ -51,10 +66,7 @@ const server = app.listen(
 
 const io = require("socket.io")(server, {
   pingTimeout: 60000,
-  cors: {
-    origin: process.env.FRONTEND_URL,
-    credentials: true,
-  },
+  cors: corsOptions,
 });
 
 io.on("connection", (socket) => {
