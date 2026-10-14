@@ -71,7 +71,7 @@ HOW IT WORKS - USER FLOW
 
 4. MESSAGE SENDING FLOW
    ├─ User types and sends a message
-   ├─ Frontend sends: {content, chatId} to backend API
+   ├─ Frontend sends: POST /message {content, chatId} to backend API 
    ├─ Backend creates message in database with sender info
    ├─ Backend emits Socket.io event to all users in the chat group
    ├─ All connected users in that chat receive the message instantly
@@ -416,21 +416,6 @@ AUTHENTICATION & SECURITY
    └─ Token verified against JWT_SECRET from .env
 
 ================================================================================
-ENVIRONMENT VARIABLES REQUIRED
-================================================================================
-
-.env file (in root directory):
-  PORT=5000                                    # Server port
-  MONGO_URI=mongodb+srv://user:pass@...       # MongoDB Atlas connection string
-  JWT_SECRET=your_super_secret_jwt_key        # Secret for JWT signing (30+ chars recommended)
-  NODE_ENV=development                        # Environment mode (development/production)
-
-Notes:
-  • MONGO_URI: Get from MongoDB Atlas cluster connection string
-  • JWT_SECRET: Keep this secret! Generate with: node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
-  • NODE_ENV: Use "production" when deploying to production
-
-================================================================================
 SOCKET.IO REAL-TIME EVENTS (Backend Implementation Structure)
 ================================================================================
 
@@ -451,80 +436,8 @@ ON (Server listens for client events):
 Chat Rooms: Socket.io uses chat IDs as room identifiers for broadcasting
 
 ================================================================================
-PROJECT STRUCTURE
-================================================================================
-
-backend/
-  ├─ server.js                    # Main server file with Express app setup
-  ├─ config/
-  │  ├─ db.js                     # MongoDB connection logic
-  │  └─ generateToken.js          # JWT token generation function
-  ├─ controllers/
-  │  ├─ userControllers.js        # User logic (register, login, search)
-  │  ├─ chatControllers.js        # Chat logic (create, fetch, group mgmt)
-  │  └─ messageControllers.js     # Message logic (send, fetch)
-  ├─ middleware/
-  │  ├─ authMiddleware.js         # JWT authentication verification
-  │  └─ errorMiddleware.js        # Error handling middleware
-  ├─ models/
-  │  ├─ userModel.js              # User schema with password hashing
-  │  ├─ chatModel.js              # Chat schema (1:1 and groups)
-  │  └─ messageModel.js           # Message schema
-  └─ routes/
-     ├─ userRoutes.js             # /api/user endpoints
-     ├─ chatRoutes.js             # /api/chat endpoints
-     └─ messageRoutes.js          # /api/message endpoints
-
-frontend/
-  ├─ public/
-  │  └─ index.html                # Main HTML file
-  ├─ src/
-  │  ├─ App.js                    # Main React component with routes
-  │  ├─ App.css                   # App styling
-  │  ├─ index.js                  # React entry point
-  │  ├─ Pages/
-  │  │  ├─ Homepage.js            # Login/Signup page
-  │  │  └─ Chatpage.js            # Main chat interface
-  │  ├─ components/
-  │  │  ├─ Chatbox.js             # Main message display area
-  │  │  ├─ MyChats.js             # Sidebar with chat list
-  │  │  ├─ SingleChat.js          # Header info for current chat
-  │  │  ├─ ScrollableChat.js      # Scrollable message container
-  │  │  ├─ ChatLoading.js         # Loading skeleton
-  │  │  ├─ Authentication/
-  │  │  │  ├─ Login.js            # Login form
-  │  │  │  └─ Signup.js           # Registration form
-  │  │  ├─ miscellaneous/
-  │  │  │  ├─ SideDrawer.js       # Top navigation drawer
-  │  │  │  ├─ ProfileModal.js     # User profile popup
-  │  │  │  ├─ GroupChatModal.js   # Create group modal
-  │  │  │  └─ UpdateGroupChatModal.js # Edit group modal
-  │  │  ├─ userAvatar/
-  │  │  │  ├─ UserBadgeItem.js    # User badge in group creation
-  │  │  │  └─ UserListItem.js     # User item in search results
-  │  │  └─ styles.css             # Component specific styles
-  │  ├─ Context/
-  │  │  └─ ChatProvider.js        # Global state (user, chats, messages)
-  │  ├─ config/
-  │  │  └─ ChatLogics.js          # Frontend helper functions
-  │  └─ data/
-  │     └─ messages.js            # Default messages data
-
-================================================================================
 KEY FLOW EXAMPLES
 ================================================================================
-
-SCENARIO 1: User Sends a Message
-  1. User types message in Chatbox component
-  2. User clicks Send button
-  3. Frontend calls API: POST /message {content, chatId}
-  4. Backend:
-     - Creates Message document in MongoDB
-     - Populates sender user info
-     - Updates Chat.latestMessage
-     - Emits Socket.io event to all users in that chat
-  5. Socket.io delivers message to all connected clients in real-time
-  6. All users' browsers receive the message and re-render
 
 SCENARIO 2: Creating a Group Chat
   1. User clicks "New Group Chat" button
@@ -547,13 +460,6 @@ SCENARIO 3: User Searches for Another User
      - Returns all matching users EXCEPT logged-in user
   4. Frontend displays results as UserListItem components
   5. User clicks on search result to start chat or view profile
-
-SCENARIO 4: Real-Time Message Delivery
-  1. User A sends message via POST /message
-  2. Backend creates message and emits Socket.io event
-  3. All users in that chat (connected via Socket.io) receive event
-  4. Frontend of User B immediately displays new message
-  5. No page refresh needed - Socket.io handles real-time updates
 
 ================================================================================
 FEATURES IMPLEMENTED
@@ -592,63 +498,12 @@ UI/UX Features:
   ✓ Responsive Design for Desktop
 
 ================================================================================
-HOW TO RUN
-================================================================================
-
-Prerequisites:
-  • Node.js installed (v12+)
-  • MongoDB Atlas account (cloud database)
-  • npm or yarn
-
-Step 1: Setup
-  cd project-root
-  npm install
-  cd frontend && npm install --legacy-peer-deps && cd ..
-
-Step 2: Create .env file in root with:
-  PORT=5000
-  MONGO_URI=<your_mongodb_atlas_uri>
-  JWT_SECRET=<generate_strong_secret>
-  NODE_ENV=development
-
-Step 3: Start Backend (Terminal 1)
-  npm run server
-  (Runs on http://localhost:5000)
-
-Step 4: Start Frontend (Terminal 2)
-  cd frontend && npm start
-  (Runs on http://localhost:3000)
-
-Step 5: Test
-  • Open http://localhost:3000 in browser
-  • Register 2 test accounts
-  • Search for each other and start chatting!
-
-================================================================================
 DEPLOYMENT NOTES
 ================================================================================
 
 For Production Deployment:
 
-Frontend Build:
-  npm run build --prefix frontend
-  Builds optimized React app in frontend/build/
-
-Server Configuration:
-  • Set NODE_ENV=production
-  • Update MONGO_URI to production cluster
-  • Use secure JWT_SECRET (generate new one)
-  • Set proper CORS in Express if needed
-
-Hosting Options:
-  • Backend: Heroku, Render, Railway, AWS
-  • Frontend: Vercel, Netlify, AWS S3
-  • Database: MongoDB Atlas (already cloud)
-
-The app includes conditional serving of static files:
-  if (NODE_ENV === "production") {
-    Serves frontend/build/index.html for all routes
-  }
+React frontend on Vercel and Express/Socket.IO backend on Render.
 
 ================================================================================
 KNOWN LIMITATIONS / FUTURE IMPROVEMENTS
@@ -676,10 +531,3 @@ Possible Future Features:
   • Bot integration
   • Admin dashboard & user management
 
-================================================================================
-END OF DOCUMENTATION
-================================================================================
-
-This comprehensive documentation covers the full architecture, data flow, API 
-endpoints, and implementation details of the Real-Time Chat Application. For 
-questions about specific features, refer to the relevant sections above.

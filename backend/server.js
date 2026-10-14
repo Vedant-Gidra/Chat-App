@@ -13,7 +13,6 @@ const app = express();
 
 const allowedOrigins = [
   process.env.FRONTEND_URL,
-  "https://chat-app-seven-phi-8hurbe040o.vercel.app",
   "http://localhost:3000",
 ].filter(Boolean);
 
